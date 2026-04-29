@@ -5,8 +5,7 @@
 package Util;
 
 /**
- * Constantes globales del sistema de navegación.
- * 
+ * Constantes globales del sistema de navegación. 
  * Centraliza valores de configuración para evitar números mágicos
  * dispersos en el código.
  * @author felip
