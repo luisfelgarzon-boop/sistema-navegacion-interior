@@ -7,7 +7,6 @@ package Vision;
 import Modelo.NodeType;
 
 /**
- *
  * Resultado de una detección del sistema de visión.
  * Contiene el tipo de objeto detectado y su posición relativa.
  * @author felip

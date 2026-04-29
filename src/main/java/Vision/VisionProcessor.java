@@ -6,7 +6,6 @@ package Vision;
 
 /**
  * * Interfaz que define el contrato para el procesamiento de visión.
- *
  * POLIMORFISMO: Permite usar diferentes implementaciones:
  *   - CameraVisionProcessor: procesamiento con cámara real + OpenCV
  *   - SimulatedVisionProcessor: procesamiento simulado para pruebas
