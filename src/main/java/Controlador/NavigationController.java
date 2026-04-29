@@ -20,7 +20,6 @@ import java.util.List;
 /**
  **
  * Controlador principal del sistema de navegación.
- * 
  * Actúa como intermediario entre la Vista (MainView) y el Modelo
  * (NavigationMap, NavigationStrategy, etc.) siguiendo el patrón MVC.
  * 
