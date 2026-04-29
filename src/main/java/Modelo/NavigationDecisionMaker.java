@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * Motor de toma de decisiones de navegación.
- * 
  * Analiza una ruta calculada (lista de nodos) y genera instrucciones
  * de navegación legibles que serán pronunciadas por el sistema TTS.
  * 
