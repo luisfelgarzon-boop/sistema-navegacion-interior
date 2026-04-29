@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 /**
  * Pruebas unitarias para la clase Node y sus subclases.
  * Valida herencia, polimorfismo, sobrecarga y sobreescritura.
+ * 
  * @author felip
  */
 class NodeTest {

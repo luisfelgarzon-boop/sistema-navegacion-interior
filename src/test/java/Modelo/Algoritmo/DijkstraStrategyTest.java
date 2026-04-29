@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 /**
  * Pruebas unitarias para DijkstraStrategy.
  * Valida que Dijkstra encuentra rutas óptimas considerando pesos.
+ * 
  * @author felip
  */
 class DijkstraStrategyTest {

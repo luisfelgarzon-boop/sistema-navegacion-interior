@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 /**
  *Pruebas unitarias para BFSStrategy.
  * Valida que BFS encuentra rutas correctas en diferentes escenarios.
+ * 
  * @author felip
  */
 class BFSStrategyTest {

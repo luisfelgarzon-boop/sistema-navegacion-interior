@@ -17,7 +17,9 @@ import org.junit.jupiter.api.DisplayName;
 /**
  * Pruebas unitarias para NavigationDecisionMaker.
  * Valida la generación de instrucciones de navegación.
+ * 
  * @author felip
+ * 
  */
 class NavigationDecisionMakerTest {
 
