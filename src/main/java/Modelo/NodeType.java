@@ -12,7 +12,6 @@ package Modelo;
  * - Transitabilidad: si el nodo es accesible o no.
  * - Peso de navegación: factor que modifica el costo de travesía.
  * - Descripción: texto legible para instrucciones de voz.
- *
  * @author felip
  */
 public enum NodeType {
