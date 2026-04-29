@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 /**
  * Vista principal del sistema de navegación (interfaz gráfica Swing).
- * 
  * Siguiendo el patrón MVC, esta clase SOLO se encarga de:
  * - Mostrar información al usuario
  * - Capturar eventos del usuario
