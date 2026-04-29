@@ -9,7 +9,6 @@ import Vista.MainView;
 
 /**
  *  Punto de entrada principal del Sistema de Navegación Inteligente en Interiores.
- * 
  * Inicializa los componentes MVC y lanza la interfaz gráfica.
  * 
  * Patrón MVC:
