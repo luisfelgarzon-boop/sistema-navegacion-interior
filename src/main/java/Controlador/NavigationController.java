@@ -19,6 +19,7 @@ import Modelo.modelo.db.DatabaseConnection;
 import Modelo.modelo.db.EdificioDAO;
 import Modelo.modelo.db.NodoDAO;
 import Modelo.modelo.db.RutaHistorialDAO;
+import Util.JsonManager;
 import Vision.VisionProcessor;
 import Vista.MainView;
 import Voice.VoiceEngine;
@@ -53,35 +54,29 @@ public class NavigationController {
     private int currentInstructionIndex;
     private int currentEdificioId = 1;
 
-    // DAOs
     private final EdificioDAO edificioDAO;
     private final NodoDAO nodoDAO;
     private final RutaHistorialDAO rutaHistorialDAO;
 
     public NavigationController() {
-        this.decisionMaker    = new NavigationDecisionMaker();
-        this.navigationActive = false;
-        this.currentPath      = List.of();
+        this.decisionMaker       = new NavigationDecisionMaker();
+        this.navigationActive    = false;
+        this.currentPath         = List.of();
         this.currentInstructions = List.of();
         this.currentInstructionIndex = 0;
         this.map      = MapBuilder.buildSampleFloor();
         this.strategy = new DijkstraStrategy();
 
-        // Inicializar DAOs
         this.edificioDAO      = new EdificioDAO();
         this.nodoDAO          = new NodoDAO();
         this.rutaHistorialDAO = new RutaHistorialDAO();
 
-        // Cargar o crear edificio por defecto
+        JsonManager.inicializar();
         inicializarEdificioPorDefecto();
     }
 
     // ==================== BD: Inicialización ====================
 
-    /**
-     * Crea el edificio por defecto en la BD si no existe.
-     * Sobrecarga: inicializarEdificioPorDefecto() sin parámetros usa valores fijos.
-     */
     private void inicializarEdificioPorDefecto() {
         try {
             Edificio existente = edificioDAO.obtenerPorNombre("Edificio Principal");
@@ -89,83 +84,81 @@ public class NavigationController {
                 Edificio nuevo = new Edificio(
                     "Edificio Principal",
                     "Edificio cargado por defecto del sistema",
-                    "Universitario",
-                    3
+                    "Universitario", 3
                 );
                 edificioDAO.insertar(nuevo);
                 existente = edificioDAO.obtenerPorNombre("Edificio Principal");
+                if (existente != null) JsonManager.guardarEdificio(existente);
             }
-            if (existente != null) {
-                this.currentEdificioId = existente.getId();
-            }
+            if (existente != null) this.currentEdificioId = existente.getId();
         } catch (Exception e) {
-            System.err.println("[BD] No se pudo conectar a la BD: " + e.getMessage());
+            System.err.println("[BD] No se pudo conectar: " + e.getMessage());
         }
     }
 
-    // ==================== BD: CRUD Edificios ====================
+    // ==================== CRUD Edificios ====================
 
-    /** GET — Obtener todos los edificios */
     public List<Edificio> getEdificios() {
         return edificioDAO.obtenerTodos();
     }
 
-    /** GET — Obtener edificio por ID (sobrecarga) */
     public Edificio getEdificio(int id) {
         return edificioDAO.obtenerPorId(id);
     }
 
-    /** GET — Obtener edificio por nombre (sobrecarga) */
     public Edificio getEdificio(String nombre) {
         return edificioDAO.obtenerPorNombre(nombre);
     }
 
-    /** POST — Agregar edificio */
     public boolean agregarEdificio(Edificio e) {
         boolean ok = edificioDAO.insertar(e);
-        if (ok) updateStatus("Edificio registrado: " + e.getNombre());
+        if (ok) {
+            Edificio guardado = edificioDAO.obtenerPorNombre(e.getNombre());
+            if (guardado != null) JsonManager.guardarEdificio(guardado);
+            updateStatus("Edificio registrado: " + e.getNombre());
+        }
         return ok;
     }
 
-    /** PUT — Actualizar edificio */
     public boolean actualizarEdificio(Edificio e) {
         boolean ok = edificioDAO.actualizar(e);
-        if (ok) updateStatus("Edificio actualizado: " + e.getNombre());
+        if (ok) {
+            JsonManager.actualizarEdificio(e);
+            updateStatus("Edificio actualizado: " + e.getNombre());
+        }
         return ok;
     }
 
-    /** DELETE — Eliminar edificio */
     public boolean eliminarEdificio(int id) {
         boolean ok = edificioDAO.eliminar(id);
-        if (ok) updateStatus("Edificio eliminado ID: " + id);
+        if (ok) {
+            JsonManager.eliminarEdificio(id);
+            updateStatus("Edificio eliminado ID: " + id);
+        }
         return ok;
     }
 
-    // ==================== BD: Historial de rutas ====================
+    // ==================== Historial ====================
 
-    /** GET — Obtener todo el historial */
     public List<RutaHistorial> getHistorial() {
         return rutaHistorialDAO.obtenerTodos();
     }
 
-    /** GET — Historial por edificio (sobrecarga) */
     public List<RutaHistorial> getHistorial(int edificioId) {
         return rutaHistorialDAO.obtenerPorEdificio(edificioId);
     }
 
-    // ==================== BD: Nodos ====================
+    // ==================== Nodos ====================
 
-    /** GET — Nodos por edificio */
     public List<NodoDB> getNodos(int edificioId) {
         return nodoDAO.obtenerPorEdificio(edificioId);
     }
 
-    /** POST — Guardar nodo en BD */
     public boolean guardarNodo(NodoDB nodo) {
         return nodoDAO.insertar(nodo);
     }
 
-    // ==================== Acciones de navegación ====================
+    // ==================== Navegación ====================
 
     public void startNavigation() {
         if (map == null) {
@@ -184,8 +177,6 @@ public class NavigationController {
         currentInstructionIndex = 0;
         updateStatus("Navegación detenida.");
         showInstruction("Sistema en espera.");
-
-        // Cerrar conexión BD al detener
         DatabaseConnection.closeConnection();
     }
 
@@ -212,8 +203,8 @@ public class NavigationController {
             currentInstructions = decisionMaker.generateInstructions(currentPath);
             currentInstructionIndex = 0;
 
-            double dist   = decisionMaker.calculateTotalDistance(currentPath);
-            double wDist  = decisionMaker.calculateTotalDistance(currentPath, true);
+            double dist  = decisionMaker.calculateTotalDistance(currentPath);
+            double wDist = decisionMaker.calculateTotalDistance(currentPath, true);
             updateStatus(String.format("Distancia: %.1f (ponderada: %.1f).", dist, wDist));
 
             for (NavigationInstruction inst : currentInstructions) {
@@ -224,16 +215,15 @@ public class NavigationController {
                 showInstruction(currentInstructions.get(0).getMessage());
             }
 
-            // Guardar ruta en historial BD
+            // Guardar en BD y JSON
             try {
                 RutaHistorial ruta = new RutaHistorial(
-                    currentEdificioId,
-                    startId,
-                    targetId,
+                    currentEdificioId, startId, targetId,
                     strategy.getAlgorithmName()
                 );
                 rutaHistorialDAO.insertar(ruta);
-                updateStatus("Ruta guardada en historial BD.");
+                JsonManager.guardarRuta(ruta);
+                updateStatus("Ruta guardada en BD y JSON.");
             } catch (Exception e) {
                 System.err.println("[BD] Error al guardar ruta: " + e.getMessage());
             }
@@ -245,7 +235,6 @@ public class NavigationController {
 
     public void nextInstruction() {
         if (currentInstructions.isEmpty()) return;
-
         currentInstructionIndex++;
         if (currentInstructionIndex < currentInstructions.size()) {
             NavigationInstruction inst = currentInstructions.get(currentInstructionIndex);
@@ -264,28 +253,28 @@ public class NavigationController {
         updateStatus("Estrategia: " + strategy.getAlgorithmName());
     }
 
-    // ==================== Inyección de dependencias ====================
+    // ==================== Inyección ====================
 
-    public void setView(MainView view)                        { this.view = view; }
-    public void setMap(NavigationMap map)                     { this.map = map; }
-    public void setStrategy(NavigationStrategy strategy)      { this.strategy = strategy; }
-    public void setVisionProcessor(VisionProcessor vp)        { this.visionProcessor = vp; }
-    public void setVoiceEngine(VoiceEngine ve)                { this.voiceEngine = ve; }
-    public void setCurrentEdificioId(int id)                  { this.currentEdificioId = id; }
+    public void setView(MainView view)                  { this.view = view; }
+    public void setMap(NavigationMap map)               { this.map = map; }
+    public void setStrategy(NavigationStrategy s)       { this.strategy = s; }
+    public void setVisionProcessor(VisionProcessor vp)  { this.visionProcessor = vp; }
+    public void setVoiceEngine(VoiceEngine ve)          { this.voiceEngine = ve; }
+    public void setCurrentEdificioId(int id)            { this.currentEdificioId = id; }
 
     // ==================== Getters ====================
 
-    public boolean isNavigationActive()                       { return navigationActive; }
-    public List<Node> getCurrentPath()                        { return currentPath; }
+    public boolean isNavigationActive()                        { return navigationActive; }
+    public List<Node> getCurrentPath()                         { return currentPath; }
     public List<NavigationInstruction> getCurrentInstructions(){ return currentInstructions; }
-    public NavigationMap getMap()                             { return map; }
-    public NavigationStrategy getStrategy()                   { return strategy; }
-    public NavigationDecisionMaker getDecisionMaker()         { return decisionMaker; }
-    public Node getCurrentPosition()                          { return currentPosition; }
-    public void setCurrentPosition(Node position)             { this.currentPosition = position; }
-    public int getCurrentEdificioId()                         { return currentEdificioId; }
+    public NavigationMap getMap()                              { return map; }
+    public NavigationStrategy getStrategy()                    { return strategy; }
+    public NavigationDecisionMaker getDecisionMaker()          { return decisionMaker; }
+    public Node getCurrentPosition()                           { return currentPosition; }
+    public void setCurrentPosition(Node p)                     { this.currentPosition = p; }
+    public int getCurrentEdificioId()                          { return currentEdificioId; }
 
-    // ==================== Comunicación con la vista ====================
+    // ==================== Vista ====================
 
     private void updateStatus(String message) {
         if (view != null) view.updateStatus(message);
