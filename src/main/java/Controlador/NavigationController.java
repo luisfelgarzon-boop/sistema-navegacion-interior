@@ -7,11 +7,18 @@ package Controlador;
 import Modelo.Algoritmo.BFSStrategy;
 import Modelo.Algoritmo.DijkstraStrategy;
 import Modelo.Algoritmo.NavigationStrategy;
+import Modelo.Edificio;
 import Modelo.MapBuilder;
+import Modelo.NodoDB;
 import Modelo.NavigationDecisionMaker;
 import Modelo.NavigationDecisionMaker.NavigationInstruction;
 import Modelo.NavigationMap;
 import Modelo.Node;
+import Modelo.RutaHistorial;
+import Modelo.modelo.db.DatabaseConnection;
+import Modelo.modelo.db.EdificioDAO;
+import Modelo.modelo.db.NodoDAO;
+import Modelo.modelo.db.RutaHistorialDAO;
 import Vision.VisionProcessor;
 import Vista.MainView;
 import Voice.VoiceEngine;
@@ -44,72 +51,132 @@ public class NavigationController {
     private List<NavigationInstruction> currentInstructions;
     private Node currentPosition;
     private int currentInstructionIndex;
+    private int currentEdificioId = 1;
 
-    /**
-     * Constructor del controlador.
-     * Inicializa el DecisionMaker y carga un mapa de ejemplo por defecto.
-     */
+    // DAOs
+    private final EdificioDAO edificioDAO;
+    private final NodoDAO nodoDAO;
+    private final RutaHistorialDAO rutaHistorialDAO;
+
     public NavigationController() {
-        this.decisionMaker = new NavigationDecisionMaker();
+        this.decisionMaker    = new NavigationDecisionMaker();
         this.navigationActive = false;
-        this.currentPath = List.of();
+        this.currentPath      = List.of();
         this.currentInstructions = List.of();
         this.currentInstructionIndex = 0;
-
-        // Cargar mapa de ejemplo y estrategia por defecto
-        this.map = MapBuilder.buildSampleFloor();
+        this.map      = MapBuilder.buildSampleFloor();
         this.strategy = new DijkstraStrategy();
+
+        // Inicializar DAOs
+        this.edificioDAO      = new EdificioDAO();
+        this.nodoDAO          = new NodoDAO();
+        this.rutaHistorialDAO = new RutaHistorialDAO();
+
+        // Cargar o crear edificio por defecto
+        inicializarEdificioPorDefecto();
     }
 
-    // ==================== Inyección de dependencias ====================
+    // ==================== BD: Inicialización ====================
 
-    public void setView(MainView view) {
-        this.view = view;
+    /**
+     * Crea el edificio por defecto en la BD si no existe.
+     * Sobrecarga: inicializarEdificioPorDefecto() sin parámetros usa valores fijos.
+     */
+    private void inicializarEdificioPorDefecto() {
+        try {
+            Edificio existente = edificioDAO.obtenerPorNombre("Edificio Principal");
+            if (existente == null) {
+                Edificio nuevo = new Edificio(
+                    "Edificio Principal",
+                    "Edificio cargado por defecto del sistema",
+                    "Universitario",
+                    3
+                );
+                edificioDAO.insertar(nuevo);
+                existente = edificioDAO.obtenerPorNombre("Edificio Principal");
+            }
+            if (existente != null) {
+                this.currentEdificioId = existente.getId();
+            }
+        } catch (Exception e) {
+            System.err.println("[BD] No se pudo conectar a la BD: " + e.getMessage());
+        }
     }
 
-    public void setMap(NavigationMap map) {
-        this.map = map;
+    // ==================== BD: CRUD Edificios ====================
+
+    /** GET — Obtener todos los edificios */
+    public List<Edificio> getEdificios() {
+        return edificioDAO.obtenerTodos();
     }
 
-    public void setStrategy(NavigationStrategy strategy) {
-        this.strategy = strategy;
-        updateStatus("Estrategia cambiada a: " + strategy.getAlgorithmName());
+    /** GET — Obtener edificio por ID (sobrecarga) */
+    public Edificio getEdificio(int id) {
+        return edificioDAO.obtenerPorId(id);
     }
 
-    public void setVisionProcessor(VisionProcessor visionProcessor) {
-        this.visionProcessor = visionProcessor;
+    /** GET — Obtener edificio por nombre (sobrecarga) */
+    public Edificio getEdificio(String nombre) {
+        return edificioDAO.obtenerPorNombre(nombre);
     }
 
-    public void setVoiceEngine(VoiceEngine voiceEngine) {
-        this.voiceEngine = voiceEngine;
+    /** POST — Agregar edificio */
+    public boolean agregarEdificio(Edificio e) {
+        boolean ok = edificioDAO.insertar(e);
+        if (ok) updateStatus("Edificio registrado: " + e.getNombre());
+        return ok;
+    }
+
+    /** PUT — Actualizar edificio */
+    public boolean actualizarEdificio(Edificio e) {
+        boolean ok = edificioDAO.actualizar(e);
+        if (ok) updateStatus("Edificio actualizado: " + e.getNombre());
+        return ok;
+    }
+
+    /** DELETE — Eliminar edificio */
+    public boolean eliminarEdificio(int id) {
+        boolean ok = edificioDAO.eliminar(id);
+        if (ok) updateStatus("Edificio eliminado ID: " + id);
+        return ok;
+    }
+
+    // ==================== BD: Historial de rutas ====================
+
+    /** GET — Obtener todo el historial */
+    public List<RutaHistorial> getHistorial() {
+        return rutaHistorialDAO.obtenerTodos();
+    }
+
+    /** GET — Historial por edificio (sobrecarga) */
+    public List<RutaHistorial> getHistorial(int edificioId) {
+        return rutaHistorialDAO.obtenerPorEdificio(edificioId);
+    }
+
+    // ==================== BD: Nodos ====================
+
+    /** GET — Nodos por edificio */
+    public List<NodoDB> getNodos(int edificioId) {
+        return nodoDAO.obtenerPorEdificio(edificioId);
+    }
+
+    /** POST — Guardar nodo en BD */
+    public boolean guardarNodo(NodoDB nodo) {
+        return nodoDAO.insertar(nodo);
     }
 
     // ==================== Acciones de navegación ====================
 
-    /**
-     * Inicia el proceso de navegación.
-     * Se invoca desde la vista cuando el usuario presiona "Iniciar".
-     */
     public void startNavigation() {
         if (map == null) {
             updateStatus("Error: No hay mapa cargado.");
             return;
         }
-        if (strategy == null) {
-            updateStatus("Error: No hay estrategia de navegación seleccionada.");
-            return;
-        }
-
         navigationActive = true;
         updateStatus("Navegación iniciada con " + strategy.getAlgorithmName() + ".");
         updateStatus("Mapa cargado: " + map.toString());
-        System.out.println("[Controller] Navegación iniciada.");
     }
 
-    /**
-     * Detiene el proceso de navegación.
-     * Se invoca desde la vista cuando el usuario presiona "Detener".
-     */
     public void stopNavigation() {
         navigationActive = false;
         currentPath = List.of();
@@ -117,85 +184,74 @@ public class NavigationController {
         currentInstructionIndex = 0;
         updateStatus("Navegación detenida.");
         showInstruction("Sistema en espera.");
-        System.out.println("[Controller] Navegación detenida.");
+
+        // Cerrar conexión BD al detener
+        DatabaseConnection.closeConnection();
     }
 
-    /**
-     * Calcula la ruta entre dos nodos usando la estrategia actual,
-     * y genera las instrucciones de navegación correspondientes.
-     * 
-     * @param startId  ID del nodo de inicio
-     * @param targetId ID del nodo de destino
-     * @return lista de nodos que forman la ruta
-     */
     public List<Node> calculateRoute(String startId, String targetId) {
-        if (map == null || strategy == null) {
-            return List.of();
-        }
+        if (map == null || strategy == null) return List.of();
 
-        Node start = map.getNode(startId);
+        Node start  = map.getNode(startId);
         Node target = map.getNode(targetId);
 
         if (start == null || target == null) {
-            updateStatus("Error: Nodos de inicio o destino no encontrados.");
+            updateStatus("Error: Nodos no encontrados.");
             return List.of();
         }
 
         currentPath = strategy.findPath(map, start, target);
 
         if (currentPath.isEmpty()) {
-            updateStatus("No se encontró una ruta hacia el destino.");
+            updateStatus("No se encontró ruta.");
             showInstruction("No hay ruta disponible.");
         } else {
-            updateStatus(String.format("Ruta encontrada: %d pasos usando %s.",
+            updateStatus(String.format("Ruta encontrada: %d pasos con %s.",
                     currentPath.size(), strategy.getAlgorithmName()));
 
-            // Generar instrucciones de navegación con el DecisionMaker
             currentInstructions = decisionMaker.generateInstructions(currentPath);
             currentInstructionIndex = 0;
 
-            // Mostrar resumen de distancia
-            double distance = decisionMaker.calculateTotalDistance(currentPath);
-            double weightedDistance = decisionMaker.calculateTotalDistance(currentPath, true);
-            updateStatus(String.format("Distancia: %.1f unidades (ponderada: %.1f).",
-                    distance, weightedDistance));
+            double dist   = decisionMaker.calculateTotalDistance(currentPath);
+            double wDist  = decisionMaker.calculateTotalDistance(currentPath, true);
+            updateStatus(String.format("Distancia: %.1f (ponderada: %.1f).", dist, wDist));
 
-            // Mostrar todas las instrucciones en el registro
-            for (NavigationInstruction instruction : currentInstructions) {
-                updateStatus(instruction.toString());
+            for (NavigationInstruction inst : currentInstructions) {
+                updateStatus(inst.toString());
             }
 
-            // Mostrar primera instrucción en el panel de instrucciones
             if (!currentInstructions.isEmpty()) {
                 showInstruction(currentInstructions.get(0).getMessage());
             }
+
+            // Guardar ruta en historial BD
+            try {
+                RutaHistorial ruta = new RutaHistorial(
+                    currentEdificioId,
+                    startId,
+                    targetId,
+                    strategy.getAlgorithmName()
+                );
+                rutaHistorialDAO.insertar(ruta);
+                updateStatus("Ruta guardada en historial BD.");
+            } catch (Exception e) {
+                System.err.println("[BD] Error al guardar ruta: " + e.getMessage());
+            }
         }
 
-        // Actualizar el mapa en la vista
-        if (view != null) {
-            view.refreshMap();
-        }
-
+        if (view != null) view.refreshMap();
         return currentPath;
     }
 
-    /**
-     * Avanza a la siguiente instrucción de navegación.
-     * Se puede invocar periódicamente o por acción del usuario.
-     */
     public void nextInstruction() {
-        if (currentInstructions.isEmpty()) {
-            return;
-        }
+        if (currentInstructions.isEmpty()) return;
 
         currentInstructionIndex++;
         if (currentInstructionIndex < currentInstructions.size()) {
-            NavigationInstruction instruction = currentInstructions.get(currentInstructionIndex);
-            showInstruction(instruction.getMessage());
-
-            // Si hay motor de voz disponible, pronunciar la instrucción
+            NavigationInstruction inst = currentInstructions.get(currentInstructionIndex);
+            showInstruction(inst.getMessage());
             if (voiceEngine != null && !voiceEngine.isSpeaking()) {
-                voiceEngine.speak(instruction.getMessage());
+                voiceEngine.speak(inst.getMessage());
             }
         } else {
             showInstruction("Ha llegado a su destino.");
@@ -203,79 +259,41 @@ public class NavigationController {
         }
     }
 
-    /**
-     * Cambia la estrategia de navegación entre BFS y Dijkstra.
-     * 
-     * POLIMORFISMO: Intercambia estrategias en tiempo de ejecución.
-     * 
-     * @param useDijkstra true para Dijkstra, false para BFS
-     */
     public void switchStrategy(boolean useDijkstra) {
-        if (useDijkstra) {
-            this.strategy = new DijkstraStrategy();
-        } else {
-            this.strategy = new BFSStrategy();
-        }
-        updateStatus("Estrategia cambiada a: " + strategy.getAlgorithmName());
+        this.strategy = useDijkstra ? new DijkstraStrategy() : new BFSStrategy();
+        updateStatus("Estrategia: " + strategy.getAlgorithmName());
     }
 
-    // ==================== Estado del sistema ====================
+    // ==================== Inyección de dependencias ====================
 
-    public boolean isNavigationActive() {
-        return navigationActive;
-    }
+    public void setView(MainView view)                        { this.view = view; }
+    public void setMap(NavigationMap map)                     { this.map = map; }
+    public void setStrategy(NavigationStrategy strategy)      { this.strategy = strategy; }
+    public void setVisionProcessor(VisionProcessor vp)        { this.visionProcessor = vp; }
+    public void setVoiceEngine(VoiceEngine ve)                { this.voiceEngine = ve; }
+    public void setCurrentEdificioId(int id)                  { this.currentEdificioId = id; }
 
-    public List<Node> getCurrentPath() {
-        return currentPath;
-    }
+    // ==================== Getters ====================
 
-    public List<NavigationInstruction> getCurrentInstructions() {
-        return currentInstructions;
-    }
-
-    public NavigationMap getMap() {
-        return map;
-    }
-
-    public NavigationStrategy getStrategy() {
-        return strategy;
-    }
-
-    public NavigationDecisionMaker getDecisionMaker() {
-        return decisionMaker;
-    }
-
-    public Node getCurrentPosition() {
-        return currentPosition;
-    }
-
-    public void setCurrentPosition(Node position) {
-        this.currentPosition = position;
-    }
+    public boolean isNavigationActive()                       { return navigationActive; }
+    public List<Node> getCurrentPath()                        { return currentPath; }
+    public List<NavigationInstruction> getCurrentInstructions(){ return currentInstructions; }
+    public NavigationMap getMap()                             { return map; }
+    public NavigationStrategy getStrategy()                   { return strategy; }
+    public NavigationDecisionMaker getDecisionMaker()         { return decisionMaker; }
+    public Node getCurrentPosition()                          { return currentPosition; }
+    public void setCurrentPosition(Node position)             { this.currentPosition = position; }
+    public int getCurrentEdificioId()                         { return currentEdificioId; }
 
     // ==================== Comunicación con la vista ====================
 
-    /**
-     * Envía un mensaje de estado a la vista.
-     * 
-     * @param message mensaje a mostrar
-     */
     private void updateStatus(String message) {
-        if (view != null) {
-            view.updateStatus(message);
-        }
+        if (view != null) view.updateStatus(message);
+        else System.out.println("[Status] " + message);
     }
 
-    /**
-     * Muestra una instrucción de navegación en la vista.
-     * 
-     * @param instruction instrucción a mostrar
-     */
     private void showInstruction(String instruction) {
-        if (view != null) {
-            view.showInstruction(instruction);
-        }
+        if (view != null) view.showInstruction(instruction);
+        else System.out.println("[Instrucción] " + instruction);
     }
 }
-
-
