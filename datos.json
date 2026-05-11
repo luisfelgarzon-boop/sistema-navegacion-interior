@@ -1,0 +1,37 @@
+{
+  "edificios": [],
+  "historial": [
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-06 16:54:26"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-06 16:55:20"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-06 16:57:39"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-06 16:59:21"
+    }
+  ]
+}
