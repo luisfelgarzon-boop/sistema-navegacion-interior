@@ -3,7 +3,7 @@
  */
 
 package main;
-
+import Vision.*;
 import Controlador.NavigationController;
 import Vista.MainView;
 
@@ -36,4 +36,6 @@ public class App {
             System.out.println("Sistema iniciado correctamente.");
         });
     }
+    VisionProcessor vision =
+        new SimulatedVisionProcessor();
 }
