@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import org.opencv.core.*;
 import org.opencv.videoio.VideoCapture;
-import org.opencv.imgproc.Imgproc;
 import java.awt.image.BufferedImage;
 /**
  * Vista principal del sistema de navegación (interfaz gráfica Swing).
@@ -49,10 +48,14 @@ public class MainView extends JFrame {
         bindEvents();
        cameraLabel = new JLabel();
 
-       cameraLabel.setPreferredSize(new Dimension(640, 480));
+       cameraLabel.setPreferredSize(new Dimension(1000, 500));
 
        mapPanel.add(cameraLabel);
-        startCamera();
+       try {
+    startCamera();
+} catch (Exception e) {
+    e.printStackTrace();
+}
         
         setVisible(true);
     }
@@ -273,25 +276,55 @@ public class MainView extends JFrame {
             g2d.drawLine(0, y, w, y);
         }
     }
-    private void startCamera() {
+   private void startCamera() {
 
-    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    try {
 
-    camera = new VideoCapture(0);
+        System.out.println("1. Entró a startCamera");
 
-    Timer timer = new Timer(30, e -> {
+        System.load("C:/Users/JuanA/Downloads/opencv/build/java/x64/opencv_java490.dll");
 
-        Mat frame = new Mat();
+        System.out.println("2. DLL cargada");
 
-        if (camera.read(frame)) {
+        camera = new VideoCapture(0);
 
-            ImageIcon image = new ImageIcon(matToBufferedImage(frame));
+        System.out.println("3. Cámara creada");
 
-            cameraLabel.setIcon(image);
+        if (!camera.isOpened()) {
+            System.out.println("4. NO se pudo abrir cámara");
+            return;
         }
-    });
 
-    timer.start();
+        System.out.println("5. Cámara abierta");
+
+        Timer timer = new Timer(30, e -> {
+
+            Mat frame = new Mat();
+
+            if (camera.read(frame)) {
+                 Core.flip(frame, frame, 1);
+
+                System.out.println("Leyendo frame");
+
+               BufferedImage bufferedImage =
+        matToBufferedImage(frame);
+
+Image scaledImage = bufferedImage.getScaledInstance(
+        1000,
+        500,
+        Image.SCALE_SMOOTH
+);
+
+cameraLabel.setIcon(new ImageIcon(scaledImage));
+            }
+        });
+
+        timer.start();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
 }
     private BufferedImage matToBufferedImage(Mat mat) {
 
