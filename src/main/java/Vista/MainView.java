@@ -7,6 +7,10 @@ import Controlador.NavigationController;
 import Util.Constants;
 import javax.swing.*;
 import java.awt.*;
+import org.opencv.core.*;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.imgproc.Imgproc;
+import java.awt.image.BufferedImage;
 /**
  * Vista principal del sistema de navegación (interfaz gráfica Swing).
  * 
@@ -29,6 +33,8 @@ public class MainView extends JFrame {
     private JTextArea txtInstructions;
     private JPanel mapPanel;
     private JLabel lblSystemState;
+    private JLabel cameraLabel;
+    private VideoCapture camera;
 
     /**
      * Constructor de la vista principal.
@@ -41,6 +47,14 @@ public class MainView extends JFrame {
         initializeComponents();
         layoutComponents();
         bindEvents();
+       cameraLabel = new JLabel();
+
+       cameraLabel.setPreferredSize(new Dimension(640, 480));
+
+       mapPanel.add(cameraLabel);
+        startCamera();
+        
+        setVisible(true);
     }
 
     // ==================== Inicialización ====================
@@ -101,6 +115,7 @@ public class MainView extends JFrame {
                 drawMap(g);
             }
         };
+        mapPanel.setLayout(new BorderLayout());
         mapPanel.setBackground(new Color(48, 48, 48));
         mapPanel.setPreferredSize(new Dimension(500, 400));
         mapPanel.setBorder(BorderFactory.createTitledBorder(
@@ -258,4 +273,49 @@ public class MainView extends JFrame {
             g2d.drawLine(0, y, w, y);
         }
     }
+    private void startCamera() {
+
+    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+    camera = new VideoCapture(0);
+
+    Timer timer = new Timer(30, e -> {
+
+        Mat frame = new Mat();
+
+        if (camera.read(frame)) {
+
+            ImageIcon image = new ImageIcon(matToBufferedImage(frame));
+
+            cameraLabel.setIcon(image);
+        }
+    });
+
+    timer.start();
+}
+    private BufferedImage matToBufferedImage(Mat mat) {
+
+    int type = BufferedImage.TYPE_BYTE_GRAY;
+
+    if (mat.channels() > 1) {
+        type = BufferedImage.TYPE_3BYTE_BGR;
+    }
+
+    int bufferSize = mat.channels() * mat.cols() * mat.rows();
+
+    byte[] buffer = new byte[bufferSize];
+
+    mat.get(0, 0, buffer);
+
+    BufferedImage image =
+            new BufferedImage(mat.cols(), mat.rows(), type);
+
+    final byte[] targetPixels =
+            ((java.awt.image.DataBufferByte)
+                    image.getRaster().getDataBuffer()).getData();
+
+    System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+
+    return image;
+}
 }

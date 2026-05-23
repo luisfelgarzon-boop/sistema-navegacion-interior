@@ -15,7 +15,7 @@ public class SimulatedVisionProcessor implements VisionProcessor {
     private boolean active;
     private final Random random;
 
-    public SimulatedVisionProcessor() {
+    public SimulatedVisionProcessor() { 
         this.random = new Random();
     }
 

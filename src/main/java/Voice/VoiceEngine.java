@@ -39,7 +39,7 @@ public interface VoiceEngine {
     void speak(String text, float rate);
 
     /**
-     * Detiene la reproducción actual de voz.
+     * Detiene la reproducción actual de voz. 
      */
     void stop();
 

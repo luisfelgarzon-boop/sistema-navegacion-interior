@@ -21,7 +21,7 @@ public class CameraVisionProcessor implements VisionProcessor {
     public boolean initialize() {
 
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
+ 
         camera = new VideoCapture(0);
         active = camera.isOpened();
 

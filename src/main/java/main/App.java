@@ -34,7 +34,7 @@ public class App {
             controller.setView(view);
             view.setVisible(true);
             System.out.println("Sistema iniciado correctamente.");
-        });
+        }); 
     }
     VisionProcessor vision =
         new SimulatedVisionProcessor();

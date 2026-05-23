@@ -21,7 +21,7 @@ public interface VisionProcessor {
     /**
      * Inicializa el sistema de visión (cámara, modelos, etc.).
      * 
-     * @return true si la inicialización fue exitosa
+     * @return true si la inicialización fue exitosa 
      */
     boolean initialize();
 

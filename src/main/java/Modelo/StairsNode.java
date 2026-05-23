@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Modelo;
-
+ 
 /**
  ***
  * Nodo especializado que representa una escalera en el mapa.

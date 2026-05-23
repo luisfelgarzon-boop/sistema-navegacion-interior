@@ -16,7 +16,7 @@ package Modelo;
  * @author felip
  */
 public enum NodeType {
-
+ 
     /** Espacio libre transitable sin obstáculos */
     FREE_SPACE("Espacio libre", true, 1.0),
 
