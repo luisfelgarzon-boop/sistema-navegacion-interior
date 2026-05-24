@@ -7,7 +7,7 @@ package Modelo.Algoritmo;
 import Modelo.NavigationMap;
 import Modelo.Node;
 import java.util.List;
-
+ 
 /**
  **
  * Interfaz que define una estrategia de navegación (pathfinding).

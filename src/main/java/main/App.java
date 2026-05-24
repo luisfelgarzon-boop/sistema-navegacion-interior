@@ -3,6 +3,7 @@
  */
 
 package main;
+import Vision.*;
 
 import Controlador.ApiMenu;
 import Controlador.NavigationController;
@@ -34,6 +35,12 @@ public class App {
             MainView view = new MainView(controller);
             controller.setView(view);
             view.setVisible(true);
+            System.out.println("Sistema iniciado correctamente.");
+        }); 
+    }
+    VisionProcessor vision =
+        new SimulatedVisionProcessor();
+}
         });
     }
 }

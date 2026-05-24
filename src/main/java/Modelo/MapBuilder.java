@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Modelo;
-
+ 
 /**
  * Clase utilitaria para construir mapas de navegación de ejemplo.
  * Proporciona métodos estáticos (factory) para crear mapas predefinidos

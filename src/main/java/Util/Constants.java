@@ -9,7 +9,7 @@ package Util;
  * Centraliza valores de configuración para evitar números mágicos
  * dispersos en el código.
  * @author felip
- */
+ */ 
 public final class Constants {
 
     // ==================== Ventana principal ====================

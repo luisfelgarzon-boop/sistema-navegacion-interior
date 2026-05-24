@@ -11,6 +11,9 @@ import Util.Constants;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import org.opencv.core.*;
+import org.opencv.videoio.VideoCapture;
+import java.awt.image.BufferedImage;
 import java.util.List;
 /**
  * Vista principal del sistema de navegación (interfaz gráfica Swing).
@@ -35,6 +38,8 @@ public class MainView extends JFrame {
     private JTextArea txtInstructions;
     private JPanel mapPanel;
     private JLabel lblSystemState;
+    private JLabel cameraLabel;
+    private VideoCapture camera;
     private JTable tblHistorial;
     private JTable tblEdificios;
     private DefaultTableModel modelHistorial;
@@ -46,6 +51,18 @@ public class MainView extends JFrame {
         initializeComponents();
         layoutComponents();
         bindEvents();
+       cameraLabel = new JLabel();
+
+       cameraLabel.setPreferredSize(new Dimension(1000, 500));
+
+       mapPanel.add(cameraLabel);
+       try {
+    startCamera();
+} catch (Exception e) {
+    e.printStackTrace();
+}
+        
+        setVisible(true);
     }
 
     // ==================== Inicialización ====================
@@ -113,6 +130,7 @@ public class MainView extends JFrame {
                 drawMap(g);
             }
         };
+        mapPanel.setLayout(new BorderLayout());
         mapPanel.setBackground(new Color(48, 48, 48));
         mapPanel.setPreferredSize(new Dimension(500, 400));
         mapPanel.setBorder(BorderFactory.createTitledBorder(
@@ -326,4 +344,79 @@ public class MainView extends JFrame {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString(msg, (w - fm.stringWidth(msg)) / 2, h / 2);
     }
+   private void startCamera() {
+
+    try {
+
+        System.out.println("1. Entró a startCamera");
+
+        System.load("C:/Users/JuanA/Downloads/opencv/build/java/x64/opencv_java490.dll");
+
+        System.out.println("2. DLL cargada");
+
+        camera = new VideoCapture(0);
+
+        System.out.println("3. Cámara creada");
+
+        if (!camera.isOpened()) {
+            System.out.println("4. NO se pudo abrir cámara");
+            return;
+        }
+
+        System.out.println("5. Cámara abierta");
+
+        Timer timer = new Timer(30, e -> {
+
+            Mat frame = new Mat();
+
+            if (camera.read(frame)) {
+                 Core.flip(frame, frame, 1);
+
+                System.out.println("Leyendo frame");
+
+               BufferedImage bufferedImage =
+        matToBufferedImage(frame);
+
+Image scaledImage = bufferedImage.getScaledInstance(
+        1000,
+        500,
+        Image.SCALE_SMOOTH
+);
+
+cameraLabel.setIcon(new ImageIcon(scaledImage));
+            }
+        });
+
+        timer.start();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
+}
+    private BufferedImage matToBufferedImage(Mat mat) {
+
+    int type = BufferedImage.TYPE_BYTE_GRAY;
+
+    if (mat.channels() > 1) {
+        type = BufferedImage.TYPE_3BYTE_BGR;
+    }
+
+    int bufferSize = mat.channels() * mat.cols() * mat.rows();
+
+    byte[] buffer = new byte[bufferSize];
+
+    mat.get(0, 0, buffer);
+
+    BufferedImage image =
+            new BufferedImage(mat.cols(), mat.rows(), type);
+
+    final byte[] targetPixels =
+            ((java.awt.image.DataBufferByte)
+                    image.getRaster().getDataBuffer()).getData();
+
+    System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+
+    return image;
+}
 }
