@@ -1,5 +1,13 @@
 {
-  "edificios": [],
+  "edificios": [
+    {
+      "id": 12,
+      "nombre": "re",
+      "descripcion": "43fvdf",
+      "tipo": "comercial",
+      "pisos": 5
+    }
+  ],
   "historial": [
     {
       "id": 0,
@@ -56,6 +64,30 @@
       "nodoDestino": "N-9-9",
       "algoritmo": "BFS",
       "fecha": "2026-05-23 19:54:41"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 19:56:05"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 19:58:28"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 20:08:03"
     }
   ]
 }
