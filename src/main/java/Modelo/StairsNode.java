@@ -5,7 +5,7 @@
 package Modelo;
  
 /**
- ***
+ *
  * Nodo especializado que representa una escalera en el mapa.
  * 
  * HERENCIA: Extiende Node para agregar propiedades específicas

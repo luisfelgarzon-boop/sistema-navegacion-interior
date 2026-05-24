@@ -6,6 +6,8 @@ package Modelo;
 import java.util.*;
 /** 
  ***
+/**
+ *
  * Representa el mapa del entorno interior como un grafo de nodos.
  * 
  * El mapa contiene nodos (posiciones) y aristas (conexiones entre posiciones).

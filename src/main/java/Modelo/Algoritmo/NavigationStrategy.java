@@ -11,7 +11,6 @@ import java.util.List;
 /**
  **
  * Interfaz que define una estrategia de navegación (pathfinding).
- * 
  * POLIMORFISMO: Diferentes algoritmos de navegación (BFS, Dijkstra, A*)
  * implementan esta misma interfaz, permitiendo intercambiarlos
  * dinámicamente en tiempo de ejecución (Strategy Pattern).

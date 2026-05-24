@@ -5,12 +5,10 @@
 package Modelo; 
 import java.util.Objects;
 /**
- *
  * @author felip
  */
 /**
  * Clase base que representa un nodo en el mapa de navegación.
- * 
  * Un nodo es una posición discreta en el grafo del entorno interior.
  * Contiene coordenadas (x, y), un tipo y un identificador único.
  * 

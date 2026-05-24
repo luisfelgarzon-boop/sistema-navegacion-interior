@@ -18,7 +18,6 @@ import java.util.Set;
 
 /**
  * Implementación del algoritmo de Dijkstra para navegación ponderada.
- * 
  * Dijkstra encuentra la ruta con el menor COSTO TOTAL, considerando
  * los pesos de las aristas y los costos de navegación de cada nodo.
  * Esto significa que evita obstáculos costosos (escaleras, puertas cerradas)

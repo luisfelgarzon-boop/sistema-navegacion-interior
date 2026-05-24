@@ -6,7 +6,6 @@ package Modelo;
  
 /**
  * Clase utilitaria para construir mapas de navegación de ejemplo.
- * 
  * Proporciona métodos estáticos (factory) para crear mapas predefinidos
  * que permiten probar los algoritmos de navegación sin necesidad de
  * un sistema de visión real.

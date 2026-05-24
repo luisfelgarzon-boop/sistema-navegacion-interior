@@ -17,7 +17,6 @@ import java.util.Queue;
 
 /**
  * Implementación del algoritmo BFS (Breadth-First Search) para navegación.
- * 
  * BFS encuentra la ruta con el menor número de pasos (nodos) entre
  * el origen y el destino. No considera los pesos de las aristas,
  * solo la cantidad de nodos intermedios.

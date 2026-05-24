@@ -5,7 +5,7 @@
 package Modelo;
  
 /**
- ***
+ *
  * Nodo especializado que representa un obstáculo detectado en el mapa.
  * 
  * HERENCIA: Extiende Node marcándolo como no transitable.

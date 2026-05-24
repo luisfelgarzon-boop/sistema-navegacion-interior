@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 /**
  * Pruebas unitarias para NavigationMap.
  * Valida gestión de nodos, aristas y sobrecarga de addEdge.
+ * 
  * @author felip
  */
 class NavigationMapTest {

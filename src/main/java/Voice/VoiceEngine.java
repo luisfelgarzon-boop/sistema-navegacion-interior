@@ -5,8 +5,7 @@
 package Voice;
 
 /**
- * Interfaz que define el contrato para el motor de Text-to-Speech (TTS).
- * 
+ * Interfaz que define el contrato para el motor de Text-to-Speech (TTS). 
  * POLIMORFISMO: Permite usar diferentes motores TTS:
  *   - FreeTTSEngine: implementación con FreeTTS
  *   - SystemTTSEngine: implementación con el TTS del sistema operativo
