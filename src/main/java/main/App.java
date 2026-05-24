@@ -26,6 +26,11 @@ public class App {
 
         NavigationController controller = new NavigationController();
 
+        // Módulo de visión
+        VisionProcessor vision = new SimulatedVisionProcessor();
+        vision.initialize();
+        controller.setVisionProcessor(vision);
+
         // Lanzar menú API en consola
         ApiMenu api = new ApiMenu(controller);
         api.iniciar();
@@ -36,11 +41,6 @@ public class App {
             controller.setView(view);
             view.setVisible(true);
             System.out.println("Sistema iniciado correctamente.");
-        }); 
-    }
-    VisionProcessor vision =
-        new SimulatedVisionProcessor();
-}
         });
     }
 }

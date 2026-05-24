@@ -32,6 +32,30 @@
       "nodoDestino": "N-9-9",
       "algoritmo": "BFS",
       "fecha": "2026-05-06 16:59:21"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 19:38:56"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 19:40:33"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 19:54:41"
     }
   ]
 }
