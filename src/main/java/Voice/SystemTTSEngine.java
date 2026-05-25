@@ -9,41 +9,50 @@ import java.io.IOException;
  * @author marti
  */
 public class SystemTTSEngine implements VoiceEngine {
-    
+
     private boolean speaking;
-    private float volume; 
-    private float rate;   
+    private float volume;
+    private float rate;
 
     public SystemTTSEngine() {
         this.speaking = false;
-        this.volume = 100; 
-        this.rate = 0;     
+        this.volume   = 100;
+        this.rate     = 0;
     }
 
     @Override
     public boolean initialize() {
         this.speaking = false;
-        return true; 
+        System.out.println("[Voz] Motor del sistema iniciado.");
+        return true;
     }
 
     @Override
     public void speak(String text) {
         if (text == null || text.isEmpty()) return;
-        
+
         this.speaking = true;
         try {
-            
             String command = String.format(
                 "PowerShell -Command \"Add-Type -AssemblyName System.Speech; " +
                 "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
-                "$synth.Volume = %d; $synth.Rate = %d; $synth.Speak('%s')\"", 
-                (int) this.volume, (int) this.rate, text
+                "$synth.SelectVoiceByHints(" +
+                    "[System.Speech.Synthesis.VoiceGender]::Female, " +
+                    "[System.Speech.Synthesis.VoiceAge]::Adult, 0, " +
+                    "[System.Globalization.CultureInfo]::GetCultureInfo('es-ES')" +
+                "); " +
+                "$synth.Volume = %d; " +
+                "$synth.Rate = %d; " +
+                "$synth.Speak('%s')\"",
+                (int) this.volume,
+                (int) this.rate,
+                text.replace("'", "")
             );
-            
-            Process process = Runtime.getRuntime().exec(command);
-            process.waitFor(); 
+
+            Process process = Runtime.getRuntime().exec(new String[]{"cmd", "/c", command});
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
-            System.err.println("Error en SystemTTS: " + e.getMessage());
+            System.err.println("[Voz] Error en SystemTTS: " + e.getMessage());
         } finally {
             this.speaking = false;
         }
@@ -51,15 +60,12 @@ public class SystemTTSEngine implements VoiceEngine {
 
     @Override
     public void speak(String text, float rate) {
-        float previousRate = this.rate;
-        
-     
-        if (rate > 150) this.rate = 2;       
-        else if (rate < 100) this.rate = -2; 
-        else this.rate = 0;                  
-        
+        float previous = this.rate;
+        if (rate > 150)      this.rate =  2;
+        else if (rate < 100) this.rate = -2;
+        else                 this.rate =  0;
         speak(text);
-        this.rate = previousRate; 
+        this.rate = previous;
     }
 
     @Override
@@ -76,12 +82,13 @@ public class SystemTTSEngine implements VoiceEngine {
     public void setVolume(float volume) {
         if (volume < 0.0f) volume = 0.0f;
         if (volume > 1.0f) volume = 1.0f;
-        this.volume = volume * 100; 
+        this.volume = volume * 100;
     }
 
     @Override
     public void release() {
         this.speaking = false;
+        System.out.println("[Voz] Motor del sistema liberado.");
     }
 
     @Override

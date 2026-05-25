@@ -9,6 +9,7 @@ import Controlador.ApiMenu;
 import Controlador.NavigationController;
 import Vista.MainView;
 import Voice.FreeTTSEngine;
+import Voice.SystemTTSEngine;
 import Voice.VoiceEngine;
 
 /**
@@ -33,10 +34,10 @@ public class App {
         vision.initialize();
         controller.setVisionProcessor(vision);
         
-        VoiceEngine voice = new FreeTTSEngine();
+        VoiceEngine voice = new SystemTTSEngine();
         voice.initialize();
         controller.setVoiceEngine(voice);
-
+        
         // Lanzar menú API en consola
         ApiMenu api = new ApiMenu(controller);
         api.iniciar();

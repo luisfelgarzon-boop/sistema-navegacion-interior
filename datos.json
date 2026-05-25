@@ -176,6 +176,22 @@
       "nodoDestino": "N-9-9",
       "algoritmo": "BFS",
       "fecha": "2026-05-25 07:11:55"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-25 07:21:15"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-25 07:24:46"
     }
   ]
 }
