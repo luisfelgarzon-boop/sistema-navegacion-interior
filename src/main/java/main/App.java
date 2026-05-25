@@ -8,6 +8,8 @@ import Vision.*;
 import Controlador.ApiMenu;
 import Controlador.NavigationController;
 import Vista.MainView;
+import Voice.FreeTTSEngine;
+import Voice.VoiceEngine;
 
 /**
  *  Punto de entrada principal del Sistema de Navegación Inteligente en Interiores.
@@ -30,6 +32,10 @@ public class App {
         VisionProcessor vision = new SimulatedVisionProcessor();
         vision.initialize();
         controller.setVisionProcessor(vision);
+        
+        VoiceEngine voice = new FreeTTSEngine();
+        voice.initialize();
+        controller.setVoiceEngine(voice);
 
         // Lanzar menú API en consola
         ApiMenu api = new ApiMenu(controller);

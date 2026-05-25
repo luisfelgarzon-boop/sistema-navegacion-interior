@@ -3,15 +3,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Voice;
-
+import java.io.IOException;
 /**
  *
  * @author marti
  */
-package Voice;
-
-import java.io.IOException;
-
 public class SystemTTSEngine implements VoiceEngine {
     
     private boolean speaking;

@@ -88,6 +88,94 @@
       "nodoDestino": "N-9-9",
       "algoritmo": "BFS",
       "fecha": "2026-05-23 20:08:03"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-23 20:30:35"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:14:54"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:15:21"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:21:23"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:27:33"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:28:19"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:29:21"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-24 19:30:00"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-25 07:04:48"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-25 07:08:11"
+    },
+    {
+      "id": 0,
+      "edificioId": 1,
+      "nodoInicio": "N-1-1",
+      "nodoDestino": "N-9-9",
+      "algoritmo": "BFS",
+      "fecha": "2026-05-25 07:11:55"
     }
   ]
 }

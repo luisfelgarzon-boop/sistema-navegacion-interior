@@ -3,18 +3,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Voice;
-
+import com.sun.speech.freetts.Voice;
+import com.sun.speech.freetts.VoiceManager;
 /**
  *
  * @author marti
  */
-package Voice; // Regla fundamental del paquete exigida en la guía
-
-import com.sun.speech.freetts.Voice;
-import com.sun.speech.freetts.VoiceManager;
-
 public class FreeTTSEngine implements VoiceEngine {
-    
+
     private Voice ttsVoice;
     private boolean speaking;
 
@@ -25,19 +21,22 @@ public class FreeTTSEngine implements VoiceEngine {
     @Override
     public boolean initialize() {
         try {
+            System.setProperty("freetts.voices",
+                "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
+
             VoiceManager voiceManager = VoiceManager.getInstance();
-            
             this.ttsVoice = voiceManager.getVoice("kevin16");
-            
+
             if (this.ttsVoice != null) {
                 this.ttsVoice.allocate();
-                return true; 
+                System.out.println("[Voz] FreeTTS iniciado correctamente.");
+                return true;
             } else {
-                System.err.println("Error: No se pudo encontrar la voz 'kevin16'.");
+                System.err.println("[Voz] No se encontró la voz 'kevin16'.");
                 return false;
             }
         } catch (Exception e) {
-            System.err.println("Error al inicializar FreeTTS: " + e.getMessage());
+            System.err.println("[Voz] Error al inicializar FreeTTS: " + e.getMessage());
             return false;
         }
     }
@@ -54,20 +53,16 @@ public class FreeTTSEngine implements VoiceEngine {
     @Override
     public void speak(String text, float rate) {
         if (this.ttsVoice != null && text != null && !text.isEmpty()) {
-            this.speaking = true;
             float originalRate = this.ttsVoice.getRate();
-            this.ttsVoice.setRate(rate); // Ajusta la velocidad en palabras por minuto
-            this.ttsVoice.speak(text);
-            this.ttsVoice.setRate(originalRate); // Restaura la velocidad original
-            this.speaking = false;
+            this.ttsVoice.setRate(rate);
+            speak(text);
+            this.ttsVoice.setRate(originalRate);
         }
     }
 
     @Override
     public void stop() {
-        if (this.ttsVoice != null) {
-            this.speaking = false;
-        }
+        this.speaking = false;
     }
 
     @Override
