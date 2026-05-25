@@ -14,17 +14,21 @@ import Modelo.NavigationDecisionMaker;
 import Modelo.NavigationDecisionMaker.NavigationInstruction;
 import Modelo.NavigationMap;
 import Modelo.Node;
+import Modelo.NodeType;
 import Modelo.RutaHistorial;
 import Modelo.modelo.db.DatabaseConnection;
 import Modelo.modelo.db.EdificioDAO;
 import Modelo.modelo.db.NodoDAO;
 import Modelo.modelo.db.RutaHistorialDAO;
 import Util.JsonManager;
+import Vision.DetectionResult;
 import Vision.VisionProcessor;
 import Vista.MainView;
 import Voice.VoiceEngine;
-import java.util.List; 
-
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 /**
  **
  * Controlador principal del sistema de navegación.
@@ -53,6 +57,10 @@ public class NavigationController {
     private Node currentPosition;
     private int currentInstructionIndex;
     private int currentEdificioId = 1;
+
+    // Hilo de detección en tiempo real
+    private ScheduledExecutorService detectionLoop;
+    private String lastAlertMessage = "";
 
     private final EdificioDAO edificioDAO;
     private final NodoDAO nodoDAO;
@@ -98,17 +106,11 @@ public class NavigationController {
 
     // ==================== CRUD Edificios ====================
 
-    public List<Edificio> getEdificios() {
-        return edificioDAO.obtenerTodos();
-    }
+    public List<Edificio> getEdificios() { return edificioDAO.obtenerTodos(); }
 
-    public Edificio getEdificio(int id) {
-        return edificioDAO.obtenerPorId(id);
-    }
+    public Edificio getEdificio(int id) { return edificioDAO.obtenerPorId(id); }
 
-    public Edificio getEdificio(String nombre) {
-        return edificioDAO.obtenerPorNombre(nombre);
-    }
+    public Edificio getEdificio(String nombre) { return edificioDAO.obtenerPorNombre(nombre); }
 
     public boolean agregarEdificio(Edificio e) {
         boolean ok = edificioDAO.insertar(e);
@@ -140,9 +142,7 @@ public class NavigationController {
 
     // ==================== Historial ====================
 
-    public List<RutaHistorial> getHistorial() {
-        return rutaHistorialDAO.obtenerTodos();
-    }
+    public List<RutaHistorial> getHistorial() { return rutaHistorialDAO.obtenerTodos(); }
 
     public List<RutaHistorial> getHistorial(int edificioId) {
         return rutaHistorialDAO.obtenerPorEdificio(edificioId);
@@ -150,13 +150,9 @@ public class NavigationController {
 
     // ==================== Nodos ====================
 
-    public List<NodoDB> getNodos(int edificioId) {
-        return nodoDAO.obtenerPorEdificio(edificioId);
-    }
+    public List<NodoDB> getNodos(int edificioId) { return nodoDAO.obtenerPorEdificio(edificioId); }
 
-    public boolean guardarNodo(NodoDB nodo) {
-        return nodoDAO.insertar(nodo);
-    }
+    public boolean guardarNodo(NodoDB nodo) { return nodoDAO.insertar(nodo); }
 
     // ==================== Navegación ====================
 
@@ -168,17 +164,127 @@ public class NavigationController {
         navigationActive = true;
         updateStatus("Navegación iniciada con " + strategy.getAlgorithmName() + ".");
         updateStatus("Mapa cargado: " + map.toString());
+
+        // Arrancar el ciclo de detección en tiempo real
+        iniciarCicloDeteccion();
     }
 
     public void stopNavigation() {
         navigationActive = false;
+
+        // Detener el ciclo de detección
+        detenerCicloDeteccion();
+
         currentPath = List.of();
         currentInstructions = List.of();
         currentInstructionIndex = 0;
+        lastAlertMessage = "";
         updateStatus("Navegación detenida.");
         showInstruction("Sistema en espera.");
         DatabaseConnection.closeConnection();
     }
+
+    // ==================== Ciclo de detección en tiempo real ====================
+
+    /**
+     * Inicia un hilo en segundo plano que procesa frames del VisionProcessor
+     * cada 500ms y genera instrucciones de voz según lo detectado.
+     */
+    private void iniciarCicloDeteccion() {
+        if (visionProcessor == null) {
+            updateStatus("[Vision] No hay procesador de visión conectado.");
+            return;
+        }
+
+        if (!visionProcessor.isActive()) {
+            boolean ok = visionProcessor.initialize();
+            if (!ok) {
+                updateStatus("[Vision] No se pudo inicializar el procesador de visión.");
+                return;
+            }
+        }
+
+        detectionLoop = Executors.newSingleThreadScheduledExecutor();
+        detectionLoop.scheduleAtFixedRate(
+            this::procesarFrameDeteccion,
+            0, 500, TimeUnit.MILLISECONDS
+        );
+
+        updateStatus("[Vision] Ciclo de detección iniciado (cada 500ms).");
+    }
+
+    /**
+     * Detiene el hilo de detección en tiempo real.
+     */
+    private void detenerCicloDeteccion() {
+        if (detectionLoop != null && !detectionLoop.isShutdown()) {
+            detectionLoop.shutdown();
+            detectionLoop = null;
+            updateStatus("[Vision] Ciclo de detección detenido.");
+        }
+    }
+
+    /**
+     * Procesa un frame del VisionProcessor y genera la instrucción de voz
+     * correspondiente según lo que detecte.
+     * Este método corre en el hilo de detección, no en el EDT de Swing.
+     */
+    private void procesarFrameDeteccion() {
+        if (!navigationActive || visionProcessor == null) return;
+
+        try {
+            DetectionResult resultado = visionProcessor.processFrame();
+
+            if (resultado == null || resultado.getDetectedType() == NodeType.FREE_SPACE) {
+                return; // Sin detección relevante
+            }
+
+            String mensaje = generarMensajeVoz(resultado);
+
+            // Evitar repetir el mismo mensaje continuamente
+            if (mensaje != null && !mensaje.equals(lastAlertMessage)) {
+                lastAlertMessage = mensaje;
+                showInstruction(mensaje);
+                updateStatus("[Detección] " + mensaje);
+
+                // Pronunciar en voz alta
+                if (voiceEngine != null && !voiceEngine.isSpeaking()) {
+                    voiceEngine.speak(mensaje);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("[Vision] Error en ciclo de detección: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera el mensaje de voz según el tipo de objeto detectado.
+     * Aplica polimorfismo a través del NodeType del DetectionResult.
+     */
+    private String generarMensajeVoz(DetectionResult resultado) {
+        double confianza = resultado.getConfidence() * 100;
+
+        return switch (resultado.getDetectedType()) {
+            case OBSTACLE -> String.format(
+                "¡Atención! Obstáculo: %s. Confianza: %.0f%%.",
+                 resultado.getDescription(), confianza);
+
+            case DOOR -> String.format(
+                "Puerta detectada adelante. %s.",
+                resultado.getDescription());
+
+            case STAIRS -> String.format(
+                "Precaución, escalera detectada. %s.",
+                resultado.getDescription());
+
+            case WALL -> "Pared detectada. Cambie de dirección.";
+
+            default -> null;
+        };
+    }
+
+    // ==================== Ruta calculada ====================
 
     public List<Node> calculateRoute(String startId, String targetId) {
         if (map == null || strategy == null) return List.of();
@@ -212,10 +318,13 @@ public class NavigationController {
             }
 
             if (!currentInstructions.isEmpty()) {
-                showInstruction(currentInstructions.get(0).getMessage());
+                String primeraMensaje = currentInstructions.get(0).getMessage();
+                showInstruction(primeraMensaje);
+                if (voiceEngine != null && !voiceEngine.isSpeaking()) {
+                    voiceEngine.speak(primeraMensaje);
+                }
             }
 
-            // Guardar en BD y JSON
             try {
                 RutaHistorial ruta = new RutaHistorial(
                     currentEdificioId, startId, targetId,
@@ -264,15 +373,15 @@ public class NavigationController {
 
     // ==================== Getters ====================
 
-    public boolean isNavigationActive()                        { return navigationActive; }
-    public List<Node> getCurrentPath()                         { return currentPath; }
-    public List<NavigationInstruction> getCurrentInstructions(){ return currentInstructions; }
-    public NavigationMap getMap()                              { return map; }
-    public NavigationStrategy getStrategy()                    { return strategy; }
-    public NavigationDecisionMaker getDecisionMaker()          { return decisionMaker; }
-    public Node getCurrentPosition()                           { return currentPosition; }
-    public void setCurrentPosition(Node p)                     { this.currentPosition = p; }
-    public int getCurrentEdificioId()                          { return currentEdificioId; }
+    public boolean isNavigationActive()                         { return navigationActive; }
+    public List<Node> getCurrentPath()                          { return currentPath; }
+    public List<NavigationInstruction> getCurrentInstructions() { return currentInstructions; }
+    public NavigationMap getMap()                               { return map; }
+    public NavigationStrategy getStrategy()                     { return strategy; }
+    public NavigationDecisionMaker getDecisionMaker()           { return decisionMaker; }
+    public Node getCurrentPosition()                            { return currentPosition; }
+    public void setCurrentPosition(Node p)                      { this.currentPosition = p; }
+    public int getCurrentEdificioId()                           { return currentEdificioId; }
 
     // ==================== Vista ====================
 
